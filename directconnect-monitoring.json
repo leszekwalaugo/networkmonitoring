@@ -1,0 +1,410 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "1.6.0_mast_19f3bc8 - MPC Account Base Policy v1.78",
+  
+  "Parameters": {
+  
+    "DirectConnectId": {
+      "Description": " Provide Direct Connect Id",
+      "Type": "String"
+    }
+  },
+  
+  "Metadata" : {
+    "AWS::CloudFormation::Interface" : {
+      "ParameterGroups" : [
+        {
+          "Label" : { "default" : "Direct Connect Id" },
+          "Parameters" : [ "DirectConnectId"]
+        }
+	  ]	
+	}	
+  },
+  
+    "Resources": {
+	
+	"CWDXConnectionBpsEgressAnomalyDetection": {
+      "Type": "AWS::CloudWatch::AnomalyDetector",
+      "Properties": {
+        "MetricName": "ConnectionBpsEgress",
+        "Namespace": "AWS/DX",
+        "Stat": "Average",
+        "Dimensions": [
+          {
+          "Name": "ConnectionId",
+          "Value": {"Ref" : "DirectConnectId"}
+          }
+         ],		
+        "Configuration": {"MetricTimeZone": "UTC"}
+      }
+    },
+	"CWDXConnectionBpsEgressAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+	  "DependsOn": "CWDXConnectionBpsEgressAnomalyDetection",
+      "Properties": {
+	    "ActionsEnabled": true,
+		"AlarmActions": [{"Ref" : "SNSTopic"}],
+		"AlarmName": {"Fn::Join":["",[{"Ref":"DirectConnectId"},"-","CWDXConnectionBpsEgress"]]},
+        "ComparisonOperator": "LessThanLowerOrGreaterThanUpperThreshold",
+        "DatapointsToAlarm": 1,
+        "EvaluationPeriods": 1,
+		"ThresholdMetricId": "t1",
+        "TreatMissingData": "missing",
+        "Metrics": [
+          {
+          "Id": "m2",
+          "MetricStat": {
+            "Metric": {
+              "Namespace": "AWS/DX",
+              "MetricName": "ConnectionBpsEgress",
+              "Dimensions": [
+                {
+                  "Name": "ConnectionId",
+                  "Value": {"Ref" : "DirectConnectId"}
+                }
+              ]
+            },
+            "Period": 60,
+            "Stat": "Minimum"
+          }
+        },
+        {
+          "Id": "t1",
+          "Expression": "ANOMALY_DETECTION_BAND(m2, 3)"
+        }
+      ]
+      }
+    },	
+	
+    "CWDXConnectionBpsIngressAnomalyDetection": {
+      "Type": "AWS::CloudWatch::AnomalyDetector",
+      "Properties": {
+        "MetricName": "ConnectionBpsIngress",
+        "Namespace": "AWS/DX",
+        "Stat": "Average",
+        "Dimensions": [
+          {
+          "Name": "ConnectionId",
+          "Value": {"Ref" : "DirectConnectId"}
+          }
+         ],				
+        "Configuration": {"MetricTimeZone": "UTC"}
+      }
+    },
+	"CWDXConnectionBpsIngressAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+	  "DependsOn": "CWDXConnectionBpsIngressAnomalyDetection",
+      "Properties": {
+	    "ActionsEnabled": true,
+		"AlarmActions": [{"Ref" : "SNSTopic"}],
+		"AlarmName": {"Fn::Join":["",[{"Ref":"DirectConnectId"},"-","CWDXConnectionBpsIngress"]]},		
+        "ComparisonOperator": "LessThanLowerOrGreaterThanUpperThreshold",
+        "DatapointsToAlarm": 1,
+        "EvaluationPeriods": 1,
+		"ThresholdMetricId": "t1",
+        "TreatMissingData": "missing",
+        "Metrics": [
+          {
+          "Id": "m2",
+          "MetricStat": {
+            "Metric": {
+              "Namespace": "AWS/DX",
+              "MetricName": "ConnectionBpsIngress",
+              "Dimensions": [
+                {
+                  "Name": "ConnectionId",
+                  "Value": {"Ref" : "DirectConnectId"}
+                }
+              ]
+            },
+            "Period": 60,
+            "Stat": "Minimum"
+          }
+        },
+        {
+          "Id": "t1",
+          "Expression": "ANOMALY_DETECTION_BAND(m2, 3)"
+        }
+      ]
+      }
+    },	
+	
+    "CWDXConnectionPpsEgressAnomalyDetection": {
+      "Type": "AWS::CloudWatch::AnomalyDetector",
+      "Properties": {
+        "MetricName": "ConnectionPpsEgress",
+        "Namespace": "AWS/DX",
+        "Stat": "Average",
+        "Dimensions": [
+          {
+          "Name": "ConnectionId",
+          "Value": {"Ref" : "DirectConnectId"}
+          }
+         ],		
+        "Configuration": {"MetricTimeZone": "UTC"}
+      }
+    },
+	"CWDXConnectionPpsEgressAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+	  "DependsOn": "CWDXConnectionPpsEgressAnomalyDetection",
+      "Properties": {
+	    "ActionsEnabled": true,
+		"AlarmActions": [{"Ref" : "SNSTopic"}],
+		"AlarmName": {"Fn::Join":["",[{"Ref":"DirectConnectId"},"-","CWDXConnectionPpsEgress"]]},			
+        "ComparisonOperator": "LessThanLowerOrGreaterThanUpperThreshold",
+        "DatapointsToAlarm": 1,
+        "EvaluationPeriods": 1,
+		"ThresholdMetricId": "t1",
+        "TreatMissingData": "missing",
+        "Metrics": [
+          {
+          "Id": "m2",
+          "MetricStat": {
+            "Metric": {
+              "Namespace": "AWS/DX",
+              "MetricName": "ConnectionPpsEgress",
+              "Dimensions": [
+                {
+                  "Name": "ConnectionId",
+                  "Value": {"Ref" : "DirectConnectId"}
+                }
+              ]
+            },
+            "Period": 60,
+            "Stat": "Minimum"
+          }
+        },
+        {
+          "Id": "t1",
+          "Expression": "ANOMALY_DETECTION_BAND(m2, 3)"
+        }
+      ]
+      }
+    },		
+
+    "CWDXConnectionPpsIngressAnomalyDetection": {
+      "Type": "AWS::CloudWatch::AnomalyDetector",
+      "Properties": {
+        "MetricName": "ConnectionPpsIngress",
+        "Namespace": "AWS/DX",
+        "Stat": "Average",
+        "Dimensions": [
+          {
+          "Name": "ConnectionId",
+          "Value": {"Ref" : "DirectConnectId"}
+          }
+         ],		
+        "Configuration": {"MetricTimeZone": "UTC"}
+      }
+    },	
+	"CWDXConnectionPpsIngressAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+	  "DependsOn": "CWDXConnectionPpsIngressAnomalyDetection",
+      "Properties": {
+	    "ActionsEnabled": true,
+		"AlarmActions": [{"Ref" : "SNSTopic"}],
+		"AlarmName": {"Fn::Join":["",[{"Ref":"DirectConnectId"},"-","CWDXConnectionPpsIngress"]]},			
+        "ComparisonOperator": "LessThanLowerOrGreaterThanUpperThreshold",
+        "DatapointsToAlarm": 1,
+        "EvaluationPeriods": 1,
+		"ThresholdMetricId": "t1",
+        "TreatMissingData": "missing",
+        "Metrics": [
+          {
+          "Id": "m2",
+          "MetricStat": {
+            "Metric": {
+              "Namespace": "AWS/DX",
+              "MetricName": "ConnectionPpsIngress",
+              "Dimensions": [
+                {
+                  "Name": "ConnectionId",
+                  "Value": {"Ref" : "DirectConnectId"}
+                }
+              ]
+            },
+            "Period": 60,
+            "Stat": "Minimum"
+          }
+        },
+        {
+          "Id": "t1",
+          "Expression": "ANOMALY_DETECTION_BAND(m2, 3)"
+        }
+      ]
+      }
+    },	
+	
+    "CWDXConnectionErrorCountAnomalyDetection": {
+      "Type": "AWS::CloudWatch::AnomalyDetector",
+      "Properties": {
+        "MetricName": "ConnectionErrorCount",
+        "Namespace": "AWS/DX",
+        "Stat": "Average",
+        "Dimensions": [
+          {
+          "Name": "ConnectionId",
+          "Value": {"Ref" : "DirectConnectId"}
+          }
+         ],		
+        "Configuration": {"MetricTimeZone": "UTC"}
+      }
+    },
+	"CWDXConnectionErrorCountAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+	  "DependsOn": "CWDXConnectionErrorCountAnomalyDetection",
+      "Properties": {
+	    "ActionsEnabled": true,
+		"AlarmActions": [{"Ref" : "SNSTopic"}],
+		"AlarmName": {"Fn::Join":["",[{"Ref":"DirectConnectId"},"-","CWDXConnectionErrorCount"]]},		
+        "ComparisonOperator": "LessThanLowerOrGreaterThanUpperThreshold",
+        "DatapointsToAlarm": 1,
+        "EvaluationPeriods": 1,
+		"ThresholdMetricId": "t1",
+        "TreatMissingData": "missing",
+        "Metrics": [
+          {
+          "Id": "m2",
+          "MetricStat": {
+            "Metric": {
+              "Namespace": "AWS/DX",
+              "MetricName": "ConnectionErrorCount",
+              "Dimensions": [
+                {
+                  "Name": "ConnectionId",
+                  "Value": {"Ref" : "DirectConnectId"}
+                }
+              ]
+            },
+            "Period": 60,
+            "Stat": "Minimum"
+          }
+        },
+        {
+          "Id": "t1",
+          "Expression": "ANOMALY_DETECTION_BAND(m2, 3)"
+        }
+      ]
+      }
+    },	
+
+    "CWDXConnectionLightLevelTxAnomalyDetection": {
+      "Type": "AWS::CloudWatch::AnomalyDetector",
+      "Properties": {
+        "MetricName": "ConnectionLightLevelTx",
+        "Namespace": "AWS/DX",
+        "Stat": "Average",
+        "Dimensions": [
+          {
+          "Name": "ConnectionId",
+          "Value": {"Ref" : "DirectConnectId"}
+          }
+         ],		
+        "Configuration": {"MetricTimeZone": "UTC"}
+      }
+    },
+	"CWDXConnectionLightLevelTx": {
+      "Type": "AWS::CloudWatch::Alarm",
+	  "DependsOn": "CWDXConnectionLightLevelTxAnomalyDetection",
+      "Properties": {
+	    "ActionsEnabled": true,
+		"AlarmActions": [{"Ref" : "SNSTopic"}],
+		"AlarmName": {"Fn::Join":["",[{"Ref":"DirectConnectId"},"-","CWDXConnectionLightLevelTx"]]},				
+        "ComparisonOperator": "LessThanLowerOrGreaterThanUpperThreshold",
+        "DatapointsToAlarm": 1,
+        "EvaluationPeriods": 1,
+		"ThresholdMetricId": "t1",
+        "TreatMissingData": "missing",
+        "Metrics": [
+          {
+          "Id": "m2",
+          "MetricStat": {
+            "Metric": {
+              "Namespace": "AWS/DX",
+              "MetricName": "ConnectionLightLevelTx",
+              "Dimensions": [
+                {
+                  "Name": "ConnectionId",
+                  "Value": {"Ref" : "DirectConnectId"}
+                }
+              ]
+            },
+            "Period": 60,
+            "Stat": "Minimum"
+          }
+        },
+        {
+          "Id": "t1",
+          "Expression": "ANOMALY_DETECTION_BAND(m2, 3)"
+        }
+      ]
+      }
+    },
+	
+    "CWDXConnectionLightLevelRxAnomalyDetection": {
+      "Type": "AWS::CloudWatch::AnomalyDetector",
+      "Properties": {
+        "MetricName": "ConnectionLightLevelRx",
+        "Namespace": "AWS/DX",
+        "Stat": "Average",
+        "Dimensions": [
+          {
+          "Name": "ConnectionId",
+          "Value": {"Ref" : "DirectConnectId"}
+          }
+         ],		
+        "Configuration": {"MetricTimeZone": "UTC"}
+      }
+    },
+	"CWDXConnectionLightLevelRx": {
+      "Type": "AWS::CloudWatch::Alarm",
+	  "DependsOn": "CWDXConnectionLightLevelRxAnomalyDetection",
+      "Properties": {
+	    "ActionsEnabled": true,
+		"AlarmActions": [{"Ref" : "SNSTopic"}],
+		"AlarmName": {"Fn::Join":["",[{"Ref":"DirectConnectId"},"-","CWDXConnectionLightLevelRx"]]},
+        "ComparisonOperator": "LessThanLowerOrGreaterThanUpperThreshold",
+        "DatapointsToAlarm": 1,
+        "EvaluationPeriods": 1,
+		"ThresholdMetricId": "t1",
+        "TreatMissingData": "missing",
+        "Metrics": [
+          {
+          "Id": "m2",
+          "MetricStat": {
+            "Metric": {
+              "Namespace": "AWS/DX",
+              "MetricName": "ConnectionLightLevelRx",
+              "Dimensions": [
+                {
+                  "Name": "ConnectionId",
+                  "Value": {"Ref" : "DirectConnectId"}
+                }
+              ]
+            },
+            "Period": 60,
+            "Stat": "Minimum"
+          }
+        },
+        {
+          "Id": "t1",
+          "Expression": "ANOMALY_DETECTION_BAND(m2, 3)"
+        }
+      ]
+      }
+    },	
+	
+	"SNSTopic": {
+		"Type" : "AWS::SNS::Topic",
+		"Properties" : {
+		  "DisplayName" : "DX Monitoring",
+		  "Subscription" : [{
+		    "Endpoint" : "leszek.walaugo@gmail.com",
+		    "Protocol" : "Email"
+		  }],
+		  "TopicName" : "DXMonitoring"
+		}
+	}
+	
+	}
+}	

@@ -1,0 +1,781 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "1.6.0_mast_19f3bc8 - MPC Account Base Policy v1.78",
+  
+  "Parameters": {
+  
+    "LoadBalancerarn": {
+      "Description": " Provide Load Balancer ARN",
+      "Type": "String"
+    }
+  },
+  
+  "Metadata" : {
+    "AWS::CloudFormation::Interface" : {
+      "ParameterGroups" : [
+        {
+          "Label" : { "default" : "Load Balancer ARN" },
+          "Parameters" : [ "LoadBalancerarn"]
+        }
+	  ]	
+	}	
+  },
+  
+    "Resources": {
+	
+	"CWELBBackendConnectionErrorsAnomalyDetection": {
+      "Type": "AWS::CloudWatch::AnomalyDetector",
+      "Properties": {
+        "MetricName": "BackendConnectionErrors",
+        "Namespace": "AWS/ELB",
+        "Stat": "Average",
+        "Dimensions": [
+          {
+          "Name": "LoadBalancerName",
+          "Value": {"Ref" : "LoadBalancerarn"}
+          }
+         ],		
+        "Configuration": {"MetricTimeZone": "UTC"}
+      }
+    },
+	"CWELBBackendConnectionErrorsAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+	  "DependsOn": "CWELBBackendConnectionErrorsAnomalyDetection",
+      "Properties": {
+	    "ActionsEnabled": true,
+		"AlarmActions": [{"Ref" : "SNSTopic"}],
+		"AlarmName": {"Fn::Join":["",[{"Ref":"LoadBalancerarn"},"-","CWELBBackendConnectionErrors"]]},
+        "ComparisonOperator": "LessThanLowerOrGreaterThanUpperThreshold",
+        "DatapointsToAlarm": 1,
+        "EvaluationPeriods": 1,
+		"ThresholdMetricId": "t1",
+        "TreatMissingData": "missing",
+        "Metrics": [
+          {
+          "Id": "m2",
+          "MetricStat": {
+            "Metric": {
+              "Namespace": "AWS/ELB",
+              "MetricName": "BackendConnectionErrors",
+              "Dimensions": [
+                {
+                  "Name": "LoadBalancerName",
+                  "Value": {"Ref" : "LoadBalancerarn"}
+                }
+              ]
+            },
+            "Period": 60,
+            "Stat": "Minimum"
+          }
+        },
+        {
+          "Id": "t1",
+          "Expression": "ANOMALY_DETECTION_BAND(m2, 3)"
+        }
+      ]
+      }
+    },	
+
+	"CWELBDesyncMitigationMode_NonCompliant_Request_CountAnomalyDetection": {
+      "Type": "AWS::CloudWatch::AnomalyDetector",
+      "Properties": {
+        "MetricName": "DesyncMitigationMode_NonCompliant_Request_Count",
+        "Namespace": "AWS/ELB",
+        "Stat": "Average",
+        "Dimensions": [
+          {
+          "Name": "LoadBalancerName",
+          "Value": {"Ref" : "LoadBalancerarn"}
+          }
+         ],		
+        "Configuration": {"MetricTimeZone": "UTC"}
+      }
+    },
+	"CWELBDesyncMitigationMode_NonCompliant_Request_CountAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+	  "DependsOn": "CWELBDesyncMitigationMode_NonCompliant_Request_Count",
+      "Properties": {
+	    "ActionsEnabled": true,
+		"AlarmActions": [{"Ref" : "SNSTopic"}],
+		"AlarmName": {"Fn::Join":["",[{"Ref":"LoadBalancerarn"},"-","CWELBDesyncMitigationMode_NonCompliant_Request_Count"]]},		
+        "ComparisonOperator": "LessThanLowerOrGreaterThanUpperThreshold",
+        "DatapointsToAlarm": 1,
+        "EvaluationPeriods": 1,
+		"ThresholdMetricId": "t1",
+        "TreatMissingData": "missing",
+        "Metrics": [
+          {
+          "Id": "m2",
+          "MetricStat": {
+            "Metric": {
+              "Namespace": "AWS/ELB",
+              "MetricName": "DesyncMitigationMode_NonCompliant_Request_Count",
+              "Dimensions": [
+                {
+                  "Name": "LoadBalancerName",
+                  "Value": {"Ref" : "LoadBalancerarn"}
+                }
+              ]
+            },
+            "Period": 60,
+            "Stat": "Minimum"
+          }
+        },
+        {
+          "Id": "t1",
+          "Expression": "ANOMALY_DETECTION_BAND(m2, 3)"
+        }
+      ]
+      }
+    },
+	
+	"CWELBHealthyHostCountAnomalyDetection": {
+      "Type": "AWS::CloudWatch::AnomalyDetector",
+      "Properties": {
+        "MetricName": "HealthyHostCount",
+        "Namespace": "AWS/ELB",
+        "Stat": "Average",
+        "Dimensions": [
+          {
+          "Name": "LoadBalancerName",
+          "Value": {"Ref" : "LoadBalancerarn"}
+          }
+         ],		
+        "Configuration": {"MetricTimeZone": "UTC"}
+      }
+    },
+	"CWELBHealthyHostCountAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+	  "DependsOn": "CWELBHealthyHostCountAnomalyDetection",
+      "Properties": {
+	    "ActionsEnabled": true,
+		"AlarmActions": [{"Ref" : "SNSTopic"}],
+		"AlarmName": {"Fn::Join":["",[{"Ref":"LoadBalancerarn"},"-","CWELBHealthyHostCount"]]},		
+        "ComparisonOperator": "LessThanLowerOrGreaterThanUpperThreshold",
+        "DatapointsToAlarm": 1,
+        "EvaluationPeriods": 1,
+		"ThresholdMetricId": "t1",
+        "TreatMissingData": "missing",
+        "Metrics": [
+          {
+          "Id": "m2",
+          "MetricStat": {
+            "Metric": {
+              "Namespace": "AWS/ELB",
+              "MetricName": "HealthyHostCount",
+              "Dimensions": [
+                {
+                  "Name": "LoadBalancerName",
+                  "Value": {"Ref" : "LoadBalancerarn"}
+                }
+              ]
+            },
+            "Period": 60,
+            "Stat": "Minimum"
+          }
+        },
+        {
+          "Id": "t1",
+          "Expression": "ANOMALY_DETECTION_BAND(m2, 3)"
+        }
+      ]
+      }
+    },
+	
+	"CWELBHTTPCode_Backend_2XXAnomalyDetection": {
+      "Type": "AWS::CloudWatch::AnomalyDetector",
+      "Properties": {
+        "MetricName": "HTTPCode_Backend_2XX",
+        "Namespace": "AWS/ELB",
+        "Stat": "Average",
+        "Dimensions": [
+          {
+          "Name": "LoadBalancerName",
+          "Value": {"Ref" : "LoadBalancerarn"}
+          }
+         ],		
+        "Configuration": {"MetricTimeZone": "UTC"}
+      }
+    },
+	"CWELBHTTPCode_Backend_2XXAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+	  "DependsOn": "CWELBHTTPCode_Backend_2XXAnomalyDetection",
+      "Properties": {
+	    "ActionsEnabled": true,
+		"AlarmActions": [{"Ref" : "SNSTopic"}],
+		"AlarmName": {"Fn::Join":["",[{"Ref":"LoadBalancerarn"},"-","CWELBHTTPCode_Backend_2XX"]]},			
+        "ComparisonOperator": "LessThanLowerOrGreaterThanUpperThreshold",
+        "DatapointsToAlarm": 1,
+        "EvaluationPeriods": 1,
+		"ThresholdMetricId": "t1",
+        "TreatMissingData": "missing",
+        "Metrics": [
+          {
+          "Id": "m2",
+          "MetricStat": {
+            "Metric": {
+              "Namespace": "AWS/ELB",
+              "MetricName": "HTTPCode_Backend_2XX",
+              "Dimensions": [
+                {
+                  "Name": "LoadBalancerName",
+                  "Value": {"Ref" : "LoadBalancerarn"}
+                }
+              ]
+            },
+            "Period": 60,
+            "Stat": "Minimum"
+          }
+        },
+        {
+          "Id": "t1",
+          "Expression": "ANOMALY_DETECTION_BAND(m2, 3)"
+        }
+      ]
+      }
+    },
+	
+	"CWELBHTTPCode_Backend_3XXAnomalyDetection": {
+      "Type": "AWS::CloudWatch::AnomalyDetector",
+      "Properties": {
+        "MetricName": "HTTPCode_Backend_3XX",
+        "Namespace": "AWS/ELB",
+        "Stat": "Average",
+        "Dimensions": [
+          {
+          "Name": "LoadBalancerName",
+          "Value": {"Ref" : "LoadBalancerarn"}
+          }
+         ],		
+        "Configuration": {"MetricTimeZone": "UTC"}
+      }
+    },
+	"CWELBHTTPCode_Backend_3XXAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+	  "DependsOn": "CWELBHTTPCode_Backend_3XXAnomalyDetection",
+      "Properties": {
+	    "ActionsEnabled": true,
+		"AlarmActions": [{"Ref" : "SNSTopic"}],
+		"AlarmName": {"Fn::Join":["",[{"Ref":"LoadBalancerarn"},"-","CWELBHTTPCode_Backend_3XX"]]},	
+        "ComparisonOperator": "LessThanLowerOrGreaterThanUpperThreshold",
+        "DatapointsToAlarm": 1,
+        "EvaluationPeriods": 1,
+		"ThresholdMetricId": "t1",
+        "TreatMissingData": "missing",
+        "Metrics": [
+          {
+          "Id": "m2",
+          "MetricStat": {
+            "Metric": {
+              "Namespace": "AWS/ELB",
+              "MetricName": "HTTPCode_Backend_3XX",
+              "Dimensions": [
+                {
+                  "Name": "LoadBalancerName",
+                  "Value": {"Ref" : "LoadBalancerarn"}
+                }
+              ]
+            },
+            "Period": 60,
+            "Stat": "Minimum"
+          }
+        },
+        {
+          "Id": "t1",
+          "Expression": "ANOMALY_DETECTION_BAND(m2, 3)"
+        }
+      ]
+      }
+    },		
+	
+	"CWELBHTTPCode_Backend_4XXAnomalyDetection": {
+      "Type": "AWS::CloudWatch::AnomalyDetector",
+      "Properties": {
+        "MetricName": "HTTPCode_Backend_4XX",
+        "Namespace": "AWS/ELB",
+        "Stat": "Average",
+        "Dimensions": [
+          {
+          "Name": "LoadBalancerName",
+          "Value": {"Ref" : "LoadBalancerarn"}
+          }
+         ],		
+        "Configuration": {"MetricTimeZone": "UTC"}
+      }
+    },
+	"CWELBHTTPCode_Backend_4XXAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+	  "DependsOn": "CWELBHTTPCode_Backend_4XXAnomalyDetection",
+      "Properties": {
+	    "ActionsEnabled": true,
+		"AlarmActions": [{"Ref" : "SNSTopic"}],
+		"AlarmName": {"Fn::Join":["",[{"Ref":"LoadBalancerarn"},"-","CWELBHTTPCode_Backend_4XX"]]},	
+        "ComparisonOperator": "LessThanLowerOrGreaterThanUpperThreshold",
+        "DatapointsToAlarm": 1,
+        "EvaluationPeriods": 1,
+		"ThresholdMetricId": "t1",
+        "TreatMissingData": "missing",
+        "Metrics": [
+          {
+          "Id": "m2",
+          "MetricStat": {
+            "Metric": {
+              "Namespace": "AWS/ELB",
+              "MetricName": "HTTPCode_Backend_4XX",
+              "Dimensions": [
+                {
+                  "Name": "LoadBalancerName",
+                  "Value": {"Ref" : "LoadBalancerarn"}
+                }
+              ]
+            },
+            "Period": 60,
+            "Stat": "Minimum"
+          }
+        },
+        {
+          "Id": "t1",
+          "Expression": "ANOMALY_DETECTION_BAND(m2, 3)"
+        }
+      ]
+      }
+    },		
+	
+	"CWELBHTTPCode_Backend_5XXAnomalyDetection": {
+      "Type": "AWS::CloudWatch::AnomalyDetector",
+      "Properties": {
+        "MetricName": "HTTPCode_Backend_5XX",
+        "Namespace": "AWS/ELB",
+        "Stat": "Average",
+        "Dimensions": [
+          {
+          "Name": "LoadBalancerName",
+          "Value": {"Ref" : "LoadBalancerarn"}
+          }
+         ],		
+        "Configuration": {"MetricTimeZone": "UTC"}
+      }
+    },
+	"CWELBHTTPCode_Backend5XXAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+	  "DependsOn": "CWELBHTTPCode_Backend_5XXAnomalyDetection",
+      "Properties": {
+	    "ActionsEnabled": true,
+		"AlarmActions": [{"Ref" : "SNSTopic"}],
+		"AlarmName": {"Fn::Join":["",[{"Ref":"LoadBalancerarn"},"-","CWELBHTTPCode_Backend_5XX"]]},	
+        "ComparisonOperator": "LessThanLowerOrGreaterThanUpperThreshold",
+        "DatapointsToAlarm": 1,
+        "EvaluationPeriods": 1,
+		"ThresholdMetricId": "t1",
+        "TreatMissingData": "missing",
+        "Metrics": [
+          {
+          "Id": "m2",
+          "MetricStat": {
+            "Metric": {
+              "Namespace": "AWS/ELB",
+              "MetricName": "HTTPCode_Backend_5XX",
+              "Dimensions": [
+                {
+                  "Name": "LoadBalancerName",
+                  "Value": {"Ref" : "LoadBalancerarn"}
+                }
+              ]
+            },
+            "Period": 60,
+            "Stat": "Minimum"
+          }
+        },
+        {
+          "Id": "t1",
+          "Expression": "ANOMALY_DETECTION_BAND(m2, 3)"
+        }
+      ]
+      }
+    },		
+	
+	"CWELBHTTPCode_ELB_4XXAnomalyDetection": {
+      "Type": "AWS::CloudWatch::AnomalyDetector",
+      "Properties": {
+        "MetricName": "HTTPCode_ELB_4XX",
+        "Namespace": "AWS/ELB",
+        "Stat": "Average",
+        "Dimensions": [
+          {
+          "Name": "LoadBalancerName",
+          "Value": {"Ref" : "LoadBalancerarn"}
+          }
+         ],		
+        "Configuration": {"MetricTimeZone": "UTC"}
+      }
+    },
+	"CWELBHTTPCode_ELB_4XXAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+	  "DependsOn": "CWELBHTTPCode_ELB_4XX",
+      "Properties": {
+	    "ActionsEnabled": true,
+		"AlarmActions": [{"Ref" : "SNSTopic"}],
+		"AlarmName": {"Fn::Join":["",[{"Ref":"LoadBalancerarn"},"-","CWELBHTTPCode_ELB_4XX"]]},			
+        "ComparisonOperator": "LessThanLowerOrGreaterThanUpperThreshold",
+        "DatapointsToAlarm": 1,
+        "EvaluationPeriods": 1,
+		"ThresholdMetricId": "t1",
+        "TreatMissingData": "missing",
+        "Metrics": [
+          {
+          "Id": "m2",
+          "MetricStat": {
+            "Metric": {
+              "Namespace": "AWS/ELB",
+              "MetricName": "HTTPCode_ELB_4XX",
+              "Dimensions": [
+                {
+                  "Name": "LoadBalancerName",
+                  "Value": {"Ref" : "LoadBalancerarn"}
+                }
+              ]
+            },
+            "Period": 60,
+            "Stat": "Minimum"
+          }
+        },
+        {
+          "Id": "t1",
+          "Expression": "ANOMALY_DETECTION_BAND(m2, 3)"
+        }
+      ]
+      }
+    },		
+
+	"CWELBHTTPCode_ELB_5XXAnomalyDetection": {
+      "Type": "AWS::CloudWatch::AnomalyDetector",
+      "Properties": {
+        "MetricName": "HTTPCode_ELB_5XX",
+        "Namespace": "AWS/ELB",
+        "Stat": "Average",
+        "Dimensions": [
+          {
+          "Name": "LoadBalancerName",
+          "Value": {"Ref" : "LoadBalancerarn"}
+          }
+         ],		
+        "Configuration": {"MetricTimeZone": "UTC"}
+      }
+    },
+	"CWELBHTTPCode_ELB_5XXAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+	  "DependsOn": "CWELBHTTPCode_ELB_5XX",
+      "Properties": {
+	    "ActionsEnabled": true,
+		"AlarmActions": [{"Ref" : "SNSTopic"}],
+		"AlarmName": {"Fn::Join":["",[{"Ref":"LoadBalancerarn"},"-","CWELBHTTPCode_ELB_5XX"]]},	
+        "ComparisonOperator": "LessThanLowerOrGreaterThanUpperThreshold",
+        "DatapointsToAlarm": 1,
+        "EvaluationPeriods": 1,
+		"ThresholdMetricId": "t1",
+        "TreatMissingData": "missing",
+        "Metrics": [
+          {
+          "Id": "m2",
+          "MetricStat": {
+            "Metric": {
+              "Namespace": "AWS/ELB",
+              "MetricName": "HTTPCode_ELB_5XX",
+              "Dimensions": [
+                {
+                  "Name": "LoadBalancerName",
+                  "Value": {"Ref" : "LoadBalancerarn"}
+                }
+              ]
+            },
+            "Period": 60,
+            "Stat": "Minimum"
+          }
+        },
+        {
+          "Id": "t1",
+          "Expression": "ANOMALY_DETECTION_BAND(m2, 3)"
+        }
+      ]
+      }
+    },	
+	
+	"CWELBLatencyAnomalyDetection": {
+      "Type": "AWS::CloudWatch::AnomalyDetector",
+      "Properties": {
+        "MetricName": "Latency",
+        "Namespace": "AWS/ELB",
+        "Stat": "Average",
+        "Dimensions": [
+          {
+          "Name": "LoadBalancerName",
+          "Value": {"Ref" : "LoadBalancerarn"}
+          }
+         ],		
+        "Configuration": {"MetricTimeZone": "UTC"}
+      }
+    },
+	"CWELBLatencyAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+	  "DependsOn": "CWELBLatency",
+      "Properties": {
+	    "ActionsEnabled": true,
+		"AlarmActions": [{"Ref" : "SNSTopic"}],
+		"AlarmName": {"Fn::Join":["",[{"Ref":"LoadBalancerarn"},"-","CWELBLatency"]]},			
+        "ComparisonOperator": "LessThanLowerOrGreaterThanUpperThreshold",
+        "DatapointsToAlarm": 1,
+        "EvaluationPeriods": 1,
+		"ThresholdMetricId": "t1",
+        "TreatMissingData": "missing",
+        "Metrics": [
+          {
+          "Id": "m2",
+          "MetricStat": {
+            "Metric": {
+              "Namespace": "AWS/ELB",
+              "MetricName": "Latency",
+              "Dimensions": [
+                {
+                  "Name": "LoadBalancerName",
+                  "Value": {"Ref" : "LoadBalancerarn"}
+                }
+              ]
+            },
+            "Period": 60,
+            "Stat": "Minimum"
+          }
+        },
+        {
+          "Id": "t1",
+          "Expression": "ANOMALY_DETECTION_BAND(m2, 3)"
+        }
+      ]
+      }
+    },		
+	
+	"CWELBRequestCountAnomalyDetection": {
+      "Type": "AWS::CloudWatch::AnomalyDetector",
+      "Properties": {
+        "MetricName": "RequestCount",
+        "Namespace": "AWS/ELB",
+        "Stat": "Average",
+        "Dimensions": [
+          {
+          "Name": "LoadBalancerName",
+          "Value": {"Ref" : "LoadBalancerarn"}
+          }
+         ],		
+        "Configuration": {"MetricTimeZone": "UTC"}
+      }
+    },
+	"CWELBRequestCountAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+	  "DependsOn": "CWELBRequestCount",
+      "Properties": {
+	    "ActionsEnabled": true,
+		"AlarmActions": [{"Ref" : "SNSTopic"}],
+		"AlarmName": {"Fn::Join":["",[{"Ref":"LoadBalancerarn"},"-","CWELBRequestCount"]]},			
+        "ComparisonOperator": "LessThanLowerOrGreaterThanUpperThreshold",
+        "DatapointsToAlarm": 1,
+        "EvaluationPeriods": 1,
+		"ThresholdMetricId": "t1",
+        "TreatMissingData": "missing",
+        "Metrics": [
+          {
+          "Id": "m2",
+          "MetricStat": {
+            "Metric": {
+              "Namespace": "AWS/ELB",
+              "MetricName": "RequestCount",
+              "Dimensions": [
+                {
+                  "Name": "LoadBalancerName",
+                  "Value": {"Ref" : "LoadBalancerarn"}
+                }
+              ]
+            },
+            "Period": 60,
+            "Stat": "Minimum"
+          }
+        },
+        {
+          "Id": "t1",
+          "Expression": "ANOMALY_DETECTION_BAND(m2, 3)"
+        }
+      ]
+      }
+    },	
+
+	"CWELBSpilloverCountAnomalyDetection": {
+      "Type": "AWS::CloudWatch::AnomalyDetector",
+      "Properties": {
+        "MetricName": "SpilloverCount",
+        "Namespace": "AWS/ELB",
+        "Stat": "Average",
+        "Dimensions": [
+          {
+          "Name": "LoadBalancerName",
+          "Value": {"Ref" : "LoadBalancerarn"}
+          }
+         ],		
+        "Configuration": {"MetricTimeZone": "UTC"}
+      }
+    },
+	"CWELBSpilloverCountAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+	  "DependsOn": "CWELBSpilloverCount",
+      "Properties": {
+	    "ActionsEnabled": true,
+		"AlarmActions": [{"Ref" : "SNSTopic"}],
+		"AlarmName": {"Fn::Join":["",[{"Ref":"LoadBalancerarn"},"-","CWELBSpilloverCount"]]},				
+        "ComparisonOperator": "LessThanLowerOrGreaterThanUpperThreshold",
+        "DatapointsToAlarm": 1,
+        "EvaluationPeriods": 1,
+		"ThresholdMetricId": "t1",
+        "TreatMissingData": "missing",
+        "Metrics": [
+          {
+          "Id": "m2",
+          "MetricStat": {
+            "Metric": {
+              "Namespace": "AWS/ELB",
+              "MetricName": "SpilloverCount",
+              "Dimensions": [
+                {
+                  "Name": "LoadBalancerName",
+                  "Value": {"Ref" : "LoadBalancerarn"}
+                }
+              ]
+            },
+            "Period": 60,
+            "Stat": "Minimum"
+          }
+        },
+        {
+          "Id": "t1",
+          "Expression": "ANOMALY_DETECTION_BAND(m2, 3)"
+        }
+      ]
+      }
+    },	
+
+	"CWELBSurgeQueueLengthAnomalyDetection": {
+      "Type": "AWS::CloudWatch::AnomalyDetector",
+      "Properties": {
+        "MetricName": "SurgeQueueLength",
+        "Namespace": "AWS/ELB",
+        "Stat": "Average",
+        "Dimensions": [
+          {
+          "Name": "LoadBalancerName",
+          "Value": {"Ref" : "LoadBalancerarn"}
+          }
+         ],		
+        "Configuration": {"MetricTimeZone": "UTC"}
+      }
+    },
+	"CWELBSurgeQueueLengthAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+	  "DependsOn": "CWELBSurgeQueueLength",
+      "Properties": {
+	    "ActionsEnabled": true,
+		"AlarmActions": [{"Ref" : "SNSTopic"}],
+		"AlarmName": {"Fn::Join":["",[{"Ref":"LoadBalancerarn"},"-","CWELBSurgeQueueLength"]]},		
+        "ComparisonOperator": "LessThanLowerOrGreaterThanUpperThreshold",
+        "DatapointsToAlarm": 1,
+        "EvaluationPeriods": 1,
+		"ThresholdMetricId": "t1",
+        "TreatMissingData": "missing",
+        "Metrics": [
+          {
+          "Id": "m2",
+          "MetricStat": {
+            "Metric": {
+              "Namespace": "AWS/ELB",
+              "MetricName": "SurgeQueueLength",
+              "Dimensions": [
+                {
+                  "Name": "LoadBalancerName",
+                  "Value": {"Ref" : "LoadBalancerarn"}
+                }
+              ]
+            },
+            "Period": 60,
+            "Stat": "Minimum"
+          }
+        },
+        {
+          "Id": "t1",
+          "Expression": "ANOMALY_DETECTION_BAND(m2, 3)"
+        }
+      ]
+      }
+    },		
+	
+	"CWELBUnHealthyHostCountAnomalyDetection": {
+      "Type": "AWS::CloudWatch::AnomalyDetector",
+      "Properties": {
+        "MetricName": "UnHealthyHostCount",
+        "Namespace": "AWS/ELB",
+        "Stat": "Average",
+        "Dimensions": [
+          {
+          "Name": "LoadBalancerName",
+          "Value": {"Ref" : "LoadBalancerarn"}
+          }
+         ],		
+        "Configuration": {"MetricTimeZone": "UTC"}
+      }
+    },
+	"CWELBUnHealthyHostCountAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+	  "DependsOn": "CWELBUnHealthyHostCount",
+      "Properties": {
+	    "ActionsEnabled": true,
+		"AlarmActions": [{"Ref" : "SNSTopic"}],
+		"AlarmName": {"Fn::Join":["",[{"Ref":"LoadBalancerarn"},"-","CWELBUnHealthyHostCount"]]},			
+        "ComparisonOperator": "LessThanLowerOrGreaterThanUpperThreshold",
+        "DatapointsToAlarm": 1,
+        "EvaluationPeriods": 1,
+		"ThresholdMetricId": "t1",
+        "TreatMissingData": "missing",
+        "Metrics": [
+          {
+          "Id": "m2",
+          "MetricStat": {
+            "Metric": {
+              "Namespace": "AWS/ELB",
+              "MetricName": "UnHealthyHostCount",
+              "Dimensions": [
+                {
+                  "Name": "LoadBalancerName",
+                  "Value": {"Ref" : "LoadBalancerarn"}
+                }
+              ]
+            },
+            "Period": 60,
+            "Stat": "Minimum"
+          }
+        },
+        {
+          "Id": "t1",
+          "Expression": "ANOMALY_DETECTION_BAND(m2, 3)"
+        }
+      ]
+      }
+    },		
+	
+	"SNSTopic": {
+		"Type" : "AWS::SNS::Topic",
+		"Properties" : {
+		  "DisplayName" : "DX Monitoring",
+		  "Subscription" : [{
+		    "Endpoint" : "leszek.walaugo@gmail.com",
+		    "Protocol" : "Email"
+		  }],
+		  "TopicName" : "DXMonitoring"
+		}
+	}
+	
+	}
+}	

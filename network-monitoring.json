@@ -1,0 +1,450 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "1.6.0_mast_19f3bc8 - MPC Account Base Policy v1.78",
+  
+  "Parameters": {
+  
+    "CloudTrailArn": {
+      "Description": " Provide CloudTrail Arn, empty value will create new CloudTrail",
+      "Type": "String"
+    },
+
+    "KMSArn": {
+      "Description": " Provide KMS Arn for CloudTrail, empty value will create new key for CloudTrail",
+      "Type": "String"
+    },
+
+    "VPCPeering": {
+      "Description": "Enables Monioring of VPC Peering",
+	  "AllowedValues": [
+        "Yes",
+        "No"
+      ],
+      "Type": "String",
+      "Default": "Yes"
+    },
+
+    "RoutingTable": {
+      "Description": "Enables Monioring of Routing Table",
+	  "AllowedValues": [
+        "Yes",
+        "No"
+      ],
+      "Type": "String",
+      "Default": "Yes"
+    },
+
+    "Gateways": {
+      "Description": "Enables Monioring of Gateway Service",
+	  "AllowedValues": [
+        "Yes",
+        "No"
+      ],
+      "Type": "String",
+      "Default": "Yes"
+    },
+
+    "NetworkAccessList": {
+      "Description": "Enables Monioring of Network Access List",
+	  "AllowedValues": [
+        "Yes",
+        "No"
+      ],
+      "Type": "String",
+      "Default": "Yes"
+    }
+  },
+  
+  "Metadata" : {
+    "AWS::CloudFormation::Interface" : {
+      "ParameterGroups" : [
+        {
+          "Label" : { "default" : "CloudTrail Configuration" },
+          "Parameters" : [ "CloudTrailArn", "KMSArn" ]
+        },
+        {
+          "Label" : { "default": "Monitoring Options" },
+          "Parameters" : [ "VPN", "VPCPeering", "NATGateway", "RoutingTable", "Gateways", "NetworkAccessList" ]
+       	}
+	  ]	
+	}	
+  },  
+
+  "Conditions" : {
+    "CloudTrail": {"Fn::Equals": ["", {"Ref": "CloudTrailArn"}]},
+    "KMS": {"Fn::Not": [{"Fn::Equals": ["", {"Ref": "KMSArn"}]}]},
+	"KMSFalse": {"Fn::Equals": ["", {"Ref": "KMSArn"}]},
+    "VPCPeering" : {"Fn::Equals" : [{"Ref" : "VPCPeering"}, "Yes"]},
+    "RoutingTable" : {"Fn::Equals" : [{"Ref" : "RoutingTable"}, "Yes"]},
+    "Gateways" : {"Fn::Equals" : [{"Ref" : "Gateways"}, "Yes"]},
+    "NetworkAccessList" : {"Fn::Equals" : [{"Ref" : "NetworkAccessList"}, "Yes"]}
+  },
+
+  "Resources": {
+  
+    "iamroleCloudTrail": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "RoleName": "SR-CloudTrail",
+        "AssumeRolePolicyDocument": {
+           "Version" : "2012-10-17",
+           "Statement": [ {
+             "Effect": "Allow",
+             "Principal": {
+               "Service": "cloudtrail.amazonaws.com"
+             },
+             "Action": "sts:AssumeRole"} ]
+        }
+      }
+    },
+
+    "LogGroupCloudTrail": {
+      "Type" : "AWS::Logs::LogGroup",
+      "Properties" : {
+        "LogGroupName" : { "Fn::Join":["",[{ "Ref" : "AWS::AccountId" },"-CloudTrail"]]},
+        "RetentionInDays" : 30
+      }
+    },
+	
+    "iampolicyCloudTrail": {
+      "Type" : "AWS::IAM::Policy",
+      "Properties" : {
+        "PolicyName" : "AtosCloudTrailLogs",
+        "PolicyDocument" : {
+           "Version" : "2012-10-17",
+           "Statement": [ {
+             "Effect"   : "Allow",
+             "Action"   : [
+               "logs:CreateLogGroup",
+               "logs:CreateLogStream",
+               "logs:PutLogEvents",
+               "logs:DescribeLogGroups",
+               "logs:DescribeLogStreams"
+             ],
+             "Resource" : "*"
+           } 
+		   ]
+        },
+            "Roles" : [ {"Ref": "iamroleCloudTrail"} ]
+         }
+      },	
+	
+    "cloudtrail": {
+      "Type": "AWS::CloudTrail::Trail",
+	  "Condition": "CloudTrail",
+      "DependsOn" : ["iamroleCloudTrail","iampolicyCloudTrail","LogGroupCloudTrail"],
+      "Properties": {
+        "CloudWatchLogsLogGroupArn": {"Fn::GetAtt" : [ "LogGroupCloudTrail" , "Arn" ]},
+        "CloudWatchLogsRoleArn": {"Fn::GetAtt" : [ "iamroleCloudTrail" , "Arn" ]},
+        "IsMultiRegionTrail": true,
+        "KMSKeyId": {"Fn::If": ["KMS", {"Ref": "KMSArn"}, {"Ref": "AWS::NoValue"}]},
+        "IncludeGlobalServiceEvents": true,
+        "IsLogging": "true",
+        "EnableLogFileValidation": "true",
+        "S3BucketName": {"Ref": "CloudTrailS3Bucket"},
+		"TrailName" : {"Fn::Join":["",[{"Ref":"AWS::Region"},"-","CloudTrail","-",{"Ref":"AWS::AccountId"}]]}
+        }
+    },
+
+	"KMSKey":{
+      "Type": "AWS::KMS::Key",
+	  "Condition": "KMSFalse",
+	  "Properties" : {
+		"Description" : "KMS Key for Cloudtrail",
+		"KeyPolicy" : {
+			"Version": "2012-10-17",
+			"Id": "new-kms-key",
+			"Statement": [
+			  {
+			  "Sid": "Allow CloudTrail to encrypt logs",
+			  "Effect": "Allow",
+			  "Principal": {
+			    "Service": "cloudtrail.amazonaws.com"
+			  },
+			  "Action": "kms:GenerateDataKey*",
+			  "Resource": "*"
+			  },
+			  {
+			    "Sid": "Enable IAM User Permissions",
+			    "Effect": "Allow",
+                  "Principal": {
+                    "AWS": { "Fn::Join":["",["arn:aws:iam::",{ "Ref": "AWS::AccountId" },":root"]]}
+                  },
+			    "Action": "kms:*",
+			    "Resource": "*"
+			  },
+			  {
+			    "Sid": "Allow administration of the key",
+			    "Effect": "Allow",
+                  "Principal": {
+                    "AWS": { "Fn::Join":["",["arn:aws:iam::",{ "Ref": "AWS::AccountId" },":root"]]}
+                  },
+			    "Action": [
+			  	  "kms:Create*",
+			  	  "kms:Describe*",
+			  	  "kms:Enable*",
+			  	  "kms:List*",
+			  	  "kms:Put*",
+			  	  "kms:Update*",
+			   	  "kms:Revoke*",
+				  "kms:Disable*",
+				  "kms:Get*",
+				  "kms:Delete*",
+				  "kms:ScheduleKeyDeletion",
+				  "kms:CancelKeyDeletion"
+				],
+				"Resource": "*"
+				},
+			  {
+				"Sid": "Allow use of the key",
+				"Effect": "Allow",
+                  "Principal": {
+                    "AWS": { "Fn::Join":["",["arn:aws:iam::",{ "Ref": "AWS::AccountId" },":root"]]}
+                  },
+				"Action": [
+				  "kms:DescribeKey",
+				  "kms:Encrypt",
+				  "kms:Decrypt",
+				  "kms:ReEncrypt*",
+				  "kms:GenerateDataKey",
+				  "kms:GenerateDataKeyWithoutPlaintext"
+				], 
+				"Resource": "*"
+			  } 			  
+			]
+		}		
+	  }
+	},
+	
+	"CloudTrailS3Bucket": {
+      "Type": "AWS::S3::Bucket",
+	  "Properties": {
+		"BucketName" : {"Fn::Join":["",[{"Ref":"AWS::Region"},"projectname-cloudtrail-logs"]]},
+		"VersioningConfiguration": {
+            "Status": "Enabled"
+        },
+		"LifecycleConfiguration": {
+            "Rules": [
+               {
+              "Id": "YearlyExpiry",
+              "Status": "Enabled",
+              "ExpirationInDays": "365"
+              }
+            ]
+        }
+	  }
+	},
+	
+	"CloudTrailS3BucketPolicy":{
+	  "Type" : "AWS::S3::BucketPolicy",
+	  "Properties" : {
+		  "Bucket" : {"Ref": "CloudTrailS3Bucket"},
+		  "PolicyDocument" : {
+			"Version": "2012-10-17",
+			"Id": "CloudTrailBucketPolicy",
+			"Statement": [
+				{
+					"Sid": "AWSCloudTrailAclCheck",
+					"Effect": "Allow",
+					"Principal": {
+						"Service": "cloudtrail.amazonaws.com"
+					},
+					"Action": "s3:*",
+					"Resource": { "Fn::Join":["",["arn:aws:s3:::",{"Ref":"AWS::Region"},"-projectname-cloudtrail-logs"]]}
+				},
+				{
+					"Sid": "AWSCloudTrailWrite",
+					"Effect": "Allow",
+					"Principal": {
+						"Service": "cloudtrail.amazonaws.com"
+					},
+					"Action": "s3:*",
+					"Resource": { "Fn::Join":["",["arn:aws:s3:::",{"Ref":"AWS::Region"},"-projectname-cloudtrail-logs/*"]]}
+				}
+			]
+		}
+	  }
+	},	
+
+	"CWNetworkAclChangesMetricFilter": {
+        "Type": "AWS::Logs::MetricFilter",
+        "Condition": "NetworkAccessList",
+        "Properties": {
+          "LogGroupName": { "Ref" : "LogGroupCloudTrail" },
+          "FilterPattern": "{($.eventName = CreateNetworkAcl) || ($.eventName = CreateNetworkAclEntry) || ($.eventName = DeleteNetworkAcl) || ($.eventName = DeleteNetworkAclEntry) || ($.eventName = ReplaceNetworkAclEntry) || ($.eventName = ReplaceNetworkAclAssociation)}",
+          "MetricTransformations": [
+              {
+                  "MetricNamespace": "CloudTrailMetrics",
+                  "MetricName": "NetworkAclEventCount",
+                  "MetricValue": "1"
+              }
+          ]
+        }
+    },
+
+    "CWNetworkAclChangesAlarm": {
+        "Type": "AWS::CloudWatch::Alarm",
+        "Condition": "NetworkAccessList",
+        "Properties": {
+          "AlarmName" : "CloudTrailNetworkAclChanges",
+          "AlarmDescription" : "Alarms when an API call is made to create, update or delete a Network ACL.",
+          "MetricName" : "NetworkAclEventCount",
+          "Namespace" : "CloudTrailMetrics",
+          "ComparisonOperator" : "GreaterThanOrEqualToThreshold",
+          "EvaluationPeriods" : "1",
+          "Period" : "300",
+          "Statistic" : "Sum",
+          "Threshold" : "1",
+          "TreatMissingData" : "notBreaching",
+		  "AlarmActions" : [{"Ref" : "SNSTopic"}]		  
+      }
+    },
+
+    "CWGatewayChangesMetricFilter": {
+        "Type": "AWS::Logs::MetricFilter",
+        "Condition": "Gateways",
+        "Properties": {
+          "LogGroupName": { "Ref" : "LogGroupCloudTrail" },
+          "FilterPattern": "{($.eventName = CreateCustomerGateway) || ($.eventName = DeleteCustomerGateway) || ($.eventName = AttachInternetGateway) || ($.eventName = CreateInternetGateway) || ($.eventName = DeleteInternetGateway) || ($.eventName = DetachInternetGateway)}",
+          "MetricTransformations": [
+              {
+                  "MetricNamespace": "CloudTrailMetrics",
+                  "MetricName": "GatewayEventCount",
+                  "MetricValue": "1"
+              }
+            ]
+        }
+    },
+
+    "CWGatewayChangesAlarm": {
+        "Type": "AWS::CloudWatch::Alarm",
+        "Condition": "Gateways",
+        "Properties": {
+          "AlarmName" : "CloudTrailGatewayChanges",
+          "AlarmDescription" : "Alarms when an API call is made to create, update or delete a Customer or Internet Gateway.",
+          "MetricName" : "GatewayEventCount",
+          "Namespace" : "CloudTrailMetrics",
+          "ComparisonOperator" : "GreaterThanOrEqualToThreshold",
+          "EvaluationPeriods" : "1",
+          "Period" : "300",
+          "Statistic" : "Sum",
+          "Threshold" : "1",
+          "TreatMissingData" : "notBreaching",
+		  "AlarmActions" : [{"Ref" : "SNSTopic"}]		  
+      }
+    },
+
+    "CWRTBChangesMetricFilter": {
+        "Type": "AWS::Logs::MetricFilter",
+        "Condition": "RoutingTable",
+        "Properties": {
+          "LogGroupName": { "Ref" : "LogGroupCloudTrail" },
+          "FilterPattern": "{($.eventName = CreateRoute) || ($.eventName = CreateRouteTable) || ($.eventName = ReplaceRoute) || ($.eventName = ReplaceRouteTableAssociation) || ($.eventName = DeleteRouteTable) || ($.eventName = DeleteRoute) || ($.eventName = DisassociateRouteTable)}",
+          "MetricTransformations": [
+              {
+                  "MetricNamespace": "CloudTrailMetrics",
+                  "MetricName": "RTBChangeEventCount",
+                  "MetricValue": "1"
+              }
+          ]
+        }
+    },
+
+    "CWRTBChangesAlarm": {
+        "Type": "AWS::CloudWatch::Alarm",
+        "Condition": "RoutingTable",
+        "Properties": {
+          "AlarmName" : "CloudTrailRTBChanges",
+          "AlarmDescription" : "Alarms when a Routing Table change occurs",
+          "MetricName" : "RTBChangeEventCount",
+          "Namespace" : "CloudTrailMetrics",
+          "ComparisonOperator" : "GreaterThanOrEqualToThreshold",
+          "EvaluationPeriods" : "1",
+          "Period" : "300",
+          "Statistic" : "Sum",
+          "Threshold" : "1",
+          "TreatMissingData" : "notBreaching",
+		  "AlarmActions" : [{"Ref" : "SNSTopic"}]
+      }
+    },
+
+    "CWVpcStateMetricFilter": {
+        "Type": "AWS::Logs::MetricFilter",
+        "Condition": "VPCPeering",
+        "Properties": {
+            "LogGroupName": { "Ref" : "LogGroupCloudTrail" },
+            "FilterPattern": "{($.eventName = DeleteVpc) || ($.eventName = DeleteVpcPeeringConnection)}",
+            "MetricTransformations": [
+                {
+                    "MetricNamespace": "CloudTrailMetrics",
+                    "MetricName": "VpcStatus",
+                    "MetricValue": "1"
+                }
+            ]
+        }
+    },
+	
+    "CWVpcStateAlarm": {
+        "Type": "AWS::CloudWatch::Alarm",
+        "Condition": "VPCPeering",
+        "Properties": {
+            "AlarmName" : "CloudTrailVpcState",
+            "AlarmDescription" : "Alarms when an API call is made to delete a VPC or VPC peering connection.",
+            "MetricName" : "VpcStatus",
+            "Namespace" : "CloudTrailMetrics",
+            "ComparisonOperator" : "GreaterThanOrEqualToThreshold",
+            "EvaluationPeriods" : "1",
+            "Period" : "300",
+            "Statistic" : "Sum",
+            "Threshold" : "1",
+            "TreatMissingData" : "notBreaching",
+			"AlarmActions" : [{"Ref" : "SNSTopic"}]
+        }
+    },
+
+    "CWVpcChangesMetricFilter": {
+        "Type": "AWS::Logs::MetricFilter",
+        "Condition": "VPCPeering",
+        "Properties": {
+            "LogGroupName": { "Ref" : "LogGroupCloudTrail" },
+            "FilterPattern": "{($.eventName = CreateVpc) || ($.eventName = DeleteVpc) || ($.eventName = ModifyVpcAttribute) || ($.eventName = AcceptVpcPeeringConnection) || ($.eventName = CreateVpcPeeringConnection) || ($.eventName = DeleteVpcPeeringConnection) || ($.eventName = RejectVpcPeeringConnection) || ($.eventName = AttachClassicLinkVpc) || ($.eventName = DetachClassicLinkVpc) || ($.eventName = DisableVpcClassicLink) || ($.eventName = EnableVpcClassicLink)}",
+            "MetricTransformations": [
+                {
+                    "MetricNamespace": "CloudTrailMetrics",
+                    "MetricName": "VpcChangeEventCount",
+                    "MetricValue": "1"
+                }
+            ]
+        }
+    },
+	
+    "CWVpcChangesAlarm": {
+        "Type": "AWS::CloudWatch::Alarm",
+        "Condition": "VPCPeering",
+        "Properties": {
+            "AlarmName" : "CloudTrailVpcChanges",
+            "AlarmDescription" : "Alarms when an API call is made to create, update or a VPC, VPC peering connection or VPC connection to classic.",
+            "MetricName" : "VpcChangeEventCount",
+            "Namespace" : "CloudTrailMetrics",
+            "ComparisonOperator" : "GreaterThanOrEqualToThreshold",
+            "EvaluationPeriods" : "1",
+            "Period" : "300",
+            "Statistic" : "Sum",
+            "Threshold" : "1",
+            "TreatMissingData" : "notBreaching"
+        }
+    },
+
+	"SNSTopic": {
+		"Type" : "AWS::SNS::Topic",
+		"Properties" : {
+		  "DisplayName" : "projectname Network Monitoring",
+		  "Subscription" : [{
+		    "Endpoint" : "leszek.walaugo@gmail.com",
+		    "Protocol" : "Email"
+		  }],
+		  "TopicName" : "NetworkMonitoring"
+		}
+	}	
+  }  
+}

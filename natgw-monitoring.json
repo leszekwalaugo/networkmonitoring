@@ -1,0 +1,781 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "1.6.0_mast_19f3bc8 - MPC Account Base Policy v1.78",
+  
+  "Parameters": {
+  
+    "NatGatewayId": {
+      "Description": " Provide NAT Gateway Id",
+      "Type": "String"
+    }
+  },
+  
+  "Metadata" : {
+    "AWS::CloudFormation::Interface" : {
+      "ParameterGroups" : [
+        {
+          "Label" : { "default" : "NAT Gateway Id" },
+          "Parameters" : [ "NatGatewayId"]
+        }
+	  ]	
+	}	
+  },
+  
+    "Resources": {
+	
+	"CWNATGWActiveConnectionCountAnomalyDetection": {
+      "Type": "AWS::CloudWatch::AnomalyDetector",
+      "Properties": {
+        "MetricName": "ActiveConnectionCount",
+        "Namespace": "AWS/NATGateway",
+        "Stat": "Average",
+        "Dimensions": [
+          {
+          "Name": "NatGatewayId",
+          "Value": {"Ref" : "NatGatewayId"}
+          }
+         ],		
+        "Configuration": {"MetricTimeZone": "UTC"}
+      }
+    },
+	"CWNATGWActiveConnectionCountAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+	  "DependsOn": "CWNATGWActiveConnectionCountAnomalyDetection",
+      "Properties": {
+	    "ActionsEnabled": true,
+		"AlarmActions": [{"Ref" : "SNSTopic"}],
+		"AlarmName": {"Fn::Join":["",[{"Ref":"NatGatewayId"},"-","CWNATGWActiveConnectionCount"]]},		
+        "ComparisonOperator": "LessThanLowerOrGreaterThanUpperThreshold",
+        "DatapointsToAlarm": 1,
+        "EvaluationPeriods": 1,
+		"ThresholdMetricId": "t1",
+        "TreatMissingData": "missing",
+        "Metrics": [
+          {
+          "Id": "m2",
+          "MetricStat": {
+            "Metric": {
+              "Namespace": "AWS/NATGateway",
+              "MetricName": "ActiveConnectionCount",
+              "Dimensions": [
+                {
+                  "Name": "NatGatewayId",
+                  "Value": {"Ref" : "NatGatewayId"}
+                }
+              ]
+            },
+            "Period": 60,
+            "Stat": "Minimum"
+          }
+        },
+        {
+          "Id": "t1",
+          "Expression": "ANOMALY_DETECTION_BAND(m2, 3)"
+        }
+      ]
+      }
+    },	
+
+	"CWNATGWBytesInFromDestinationAnomalyDetection": {
+      "Type": "AWS::CloudWatch::AnomalyDetector",
+      "Properties": {
+        "MetricName": "BytesInFromDestination",
+        "Namespace": "AWS/NATGateway",
+        "Stat": "Average",
+        "Dimensions": [
+          {
+          "Name": "NatGatewayId",
+          "Value": {"Ref" : "NatGatewayId"}
+          }
+         ],		
+        "Configuration": {"MetricTimeZone": "UTC"}
+      }
+    },
+	"CWNATGWBytesInFromDestinationAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+	  "DependsOn": "CWNATGWBytesInFromDestinationAnomalyDetection",
+      "Properties": {
+	    "ActionsEnabled": true,
+		"AlarmActions": [{"Ref" : "SNSTopic"}],
+		"AlarmName": {"Fn::Join":["",[{"Ref":"NatGatewayId"},"-","CWNATGWBytesInFromDestination"]]},		
+        "ComparisonOperator": "LessThanLowerOrGreaterThanUpperThreshold",
+        "DatapointsToAlarm": 1,
+        "EvaluationPeriods": 1,
+		"ThresholdMetricId": "t1",
+        "TreatMissingData": "missing",
+        "Metrics": [
+          {
+          "Id": "m2",
+          "MetricStat": {
+            "Metric": {
+              "Namespace": "AWS/NATGateway",
+              "MetricName": "BytesInFromDestination",
+              "Dimensions": [
+                {
+                  "Name": "NatGatewayId",
+                  "Value": {"Ref" : "NatGatewayId"}
+                }
+              ]
+            },
+            "Period": 60,
+            "Stat": "Minimum"
+          }
+        },
+        {
+          "Id": "t1",
+          "Expression": "ANOMALY_DETECTION_BAND(m2, 3)"
+        }
+      ]
+      }
+    },	
+	
+	"CWNATGWBytesInFromSourceAnomalyDetection": {
+      "Type": "AWS::CloudWatch::AnomalyDetector",
+      "Properties": {
+        "MetricName": "BytesInFromSource",
+        "Namespace": "AWS/NATGateway",
+        "Stat": "Average",
+        "Dimensions": [
+          {
+          "Name": "NatGatewayId",
+          "Value": {"Ref" : "NatGatewayId"}
+          }
+         ],		
+        "Configuration": {"MetricTimeZone": "UTC"}
+      }
+    },
+	"CWNATGWBytesInFromSourceAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+	  "DependsOn": "CWNATGWBytesInFromSourceAnomalyDetection",
+      "Properties": {
+	    "ActionsEnabled": true,
+		"AlarmActions": [{"Ref" : "SNSTopic"}],
+		"AlarmName": {"Fn::Join":["",[{"Ref":"NatGatewayId"},"-","CWNATGWBytesInFromSource"]]},		
+        "ComparisonOperator": "LessThanLowerOrGreaterThanUpperThreshold",
+        "DatapointsToAlarm": 1,
+        "EvaluationPeriods": 1,
+		"ThresholdMetricId": "t1",
+        "TreatMissingData": "missing",
+        "Metrics": [
+          {
+          "Id": "m2",
+          "MetricStat": {
+            "Metric": {
+              "Namespace": "AWS/NATGateway",
+              "MetricName": "BytesInFromSource",
+              "Dimensions": [
+                {
+                  "Name": "NatGatewayId",
+                  "Value": {"Ref" : "NatGatewayId"}
+                }
+              ]
+            },
+            "Period": 60,
+            "Stat": "Minimum"
+          }
+        },
+        {
+          "Id": "t1",
+          "Expression": "ANOMALY_DETECTION_BAND(m2, 3)"
+        }
+      ]
+      }
+    },	
+
+	"CWNATGWBytesOutToDestinationAnomalyDetection": {
+      "Type": "AWS::CloudWatch::AnomalyDetector",
+      "Properties": {
+        "MetricName": "BytesOutToDestination",
+        "Namespace": "AWS/NATGateway",
+        "Stat": "Average",
+        "Dimensions": [
+          {
+          "Name": "NatGatewayId",
+          "Value": {"Ref" : "NatGatewayId"}
+          }
+         ],		
+        "Configuration": {"MetricTimeZone": "UTC"}
+      }
+    },
+	"CWNATGWBytesOutToDestinationAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+	  "DependsOn": "CWNATGWBytesOutToDestinationAnomalyDetection",
+      "Properties": {
+	    "ActionsEnabled": true,
+		"AlarmActions": [{"Ref" : "SNSTopic"}],
+		"AlarmName": {"Fn::Join":["",[{"Ref":"NatGatewayId"},"-","CWNATGWBytesOutToDestination"]]},		
+        "ComparisonOperator": "LessThanLowerOrGreaterThanUpperThreshold",
+        "DatapointsToAlarm": 1,
+        "EvaluationPeriods": 1,
+		"ThresholdMetricId": "t1",
+        "TreatMissingData": "missing",
+        "Metrics": [
+          {
+          "Id": "m2",
+          "MetricStat": {
+            "Metric": {
+              "Namespace": "AWS/NATGateway",
+              "MetricName": "BytesOutToDestination",
+              "Dimensions": [
+                {
+                  "Name": "NatGatewayId",
+                  "Value": {"Ref" : "NatGatewayId"}
+                }
+              ]
+            },
+            "Period": 60,
+            "Stat": "Minimum"
+          }
+        },
+        {
+          "Id": "t1",
+          "Expression": "ANOMALY_DETECTION_BAND(m2, 3)"
+        }
+      ]
+      }
+    },	
+	
+	"CWNATGWBytesOutToSourceAnomalyDetection": {
+      "Type": "AWS::CloudWatch::AnomalyDetector",
+      "Properties": {
+        "MetricName": "BytesOutToSource",
+        "Namespace": "AWS/NATGateway",
+        "Stat": "Average",
+        "Dimensions": [
+          {
+          "Name": "NatGatewayId",
+          "Value": {"Ref" : "NatGatewayId"}
+          }
+         ],		
+        "Configuration": {"MetricTimeZone": "UTC"}
+      }
+    },
+	"CWNATGWBytesOutToSourceAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+	  "DependsOn": "CWNATGWBytesOutToSourceAnomalyDetection",
+      "Properties": {
+	    "ActionsEnabled": true,
+		"AlarmActions": [{"Ref" : "SNSTopic"}],
+		"AlarmName": {"Fn::Join":["",[{"Ref":"NatGatewayId"},"-","CWNATGWBytesOutToSource"]]},	
+        "ComparisonOperator": "LessThanLowerOrGreaterThanUpperThreshold",
+        "DatapointsToAlarm": 1,
+        "EvaluationPeriods": 1,
+		"ThresholdMetricId": "t1",
+        "TreatMissingData": "missing",
+        "Metrics": [
+          {
+          "Id": "m2",
+          "MetricStat": {
+            "Metric": {
+              "Namespace": "AWS/NATGateway",
+              "MetricName": "BytesOutToSource",
+              "Dimensions": [
+                {
+                  "Name": "NatGatewayId",
+                  "Value": {"Ref" : "NatGatewayId"}
+                }
+              ]
+            },
+            "Period": 60,
+            "Stat": "Minimum"
+          }
+        },
+        {
+          "Id": "t1",
+          "Expression": "ANOMALY_DETECTION_BAND(m2, 3)"
+        }
+      ]
+      }
+    },	
+
+	"CWNATGWConnectionAttemptCountAnomalyDetection": {
+      "Type": "AWS::CloudWatch::AnomalyDetector",
+      "Properties": {
+        "MetricName": "ConnectionAttemptCount",
+        "Namespace": "AWS/NATGateway",
+        "Stat": "Average",
+        "Dimensions": [
+          {
+          "Name": "NatGatewayId",
+          "Value": {"Ref" : "NatGatewayId"}
+          }
+         ],		
+        "Configuration": {"MetricTimeZone": "UTC"}
+      }
+    },
+	"CWNATGWConnectionAttemptCountAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+	  "DependsOn": "CWNATGWConnectionAttemptCountAnomalyDetection",
+      "Properties": {
+	    "ActionsEnabled": true,
+		"AlarmActions": [{"Ref" : "SNSTopic"}],
+		"AlarmName": {"Fn::Join":["",[{"Ref":"NatGatewayId"},"-","CWNATGWConnectionAttemptCount"]]},			
+        "ComparisonOperator": "LessThanLowerOrGreaterThanUpperThreshold",
+        "DatapointsToAlarm": 1,
+        "EvaluationPeriods": 1,
+		"ThresholdMetricId": "t1",
+        "TreatMissingData": "missing",
+        "Metrics": [
+          {
+          "Id": "m2",
+          "MetricStat": {
+            "Metric": {
+              "Namespace": "AWS/NATGateway",
+              "MetricName": "ConnectionAttemptCount",
+              "Dimensions": [
+                {
+                  "Name": "NatGatewayId",
+                  "Value": {"Ref" : "NatGatewayId"}
+                }
+              ]
+            },
+            "Period": 60,
+            "Stat": "Minimum"
+          }
+        },
+        {
+          "Id": "t1",
+          "Expression": "ANOMALY_DETECTION_BAND(m2, 3)"
+        }
+      ]
+      }
+    },	
+	
+	"CWNATGWConnectionEstablishedCountAnomalyDetection": {
+      "Type": "AWS::CloudWatch::AnomalyDetector",
+      "Properties": {
+        "MetricName": "ConnectionEstablishedCount",
+        "Namespace": "AWS/NATGateway",
+        "Stat": "Average",
+        "Dimensions": [
+          {
+          "Name": "NatGatewayId",
+          "Value": {"Ref" : "NatGatewayId"}
+          }
+         ],		
+        "Configuration": {"MetricTimeZone": "UTC"}
+      }
+    },
+	"CWNATGWConnectionEstablishedCountAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+	  "DependsOn": "CWNATGWConnectionEstablishedCountAnomalyDetection",
+      "Properties": {
+	    "ActionsEnabled": true,
+		"AlarmActions": [{"Ref" : "SNSTopic"}],
+		"AlarmName": {"Fn::Join":["",[{"Ref":"NatGatewayId"},"-","CWNATGWConnectionEstablishedCount"]]},			
+        "ComparisonOperator": "LessThanLowerOrGreaterThanUpperThreshold",
+        "DatapointsToAlarm": 1,
+        "EvaluationPeriods": 1,
+		"ThresholdMetricId": "t1",
+        "TreatMissingData": "missing",
+        "Metrics": [
+          {
+          "Id": "m2",
+          "MetricStat": {
+            "Metric": {
+              "Namespace": "AWS/NATGateway",
+              "MetricName": "ConnectionEstablishedCount",
+              "Dimensions": [
+                {
+                  "Name": "NatGatewayId",
+                  "Value": {"Ref" : "NatGatewayId"}
+                }
+              ]
+            },
+            "Period": 60,
+            "Stat": "Minimum"
+          }
+        },
+        {
+          "Id": "t1",
+          "Expression": "ANOMALY_DETECTION_BAND(m2, 3)"
+        }
+      ]
+      }
+    },	
+
+	"CWNATGWErrorPortAllocationAnomalyDetection": {
+      "Type": "AWS::CloudWatch::AnomalyDetector",
+      "Properties": {
+        "MetricName": "ErrorPortAllocation",
+        "Namespace": "AWS/NATGateway",
+        "Stat": "Average",
+        "Dimensions": [
+          {
+          "Name": "NatGatewayId",
+          "Value": {"Ref" : "NatGatewayId"}
+          }
+         ],		
+        "Configuration": {"MetricTimeZone": "UTC"}
+      }
+    },
+	"CWNATGWErrorPortAllocationAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+	  "DependsOn": "CWNATGWErrorPortAllocationAnomalyDetection",
+      "Properties": {
+	    "ActionsEnabled": true,
+		"AlarmActions": [{"Ref" : "SNSTopic"}],
+		"AlarmName": {"Fn::Join":["",[{"Ref":"NatGatewayId"},"-","CWNATGWErrorPortAllocation"]]},		
+        "ComparisonOperator": "LessThanLowerOrGreaterThanUpperThreshold",
+        "DatapointsToAlarm": 1,
+        "EvaluationPeriods": 1,
+		"ThresholdMetricId": "t1",
+        "TreatMissingData": "missing",
+        "Metrics": [
+          {
+          "Id": "m2",
+          "MetricStat": {
+            "Metric": {
+              "Namespace": "AWS/NATGateway",
+              "MetricName": "ErrorPortAllocation",
+              "Dimensions": [
+                {
+                  "Name": "NatGatewayId",
+                  "Value": {"Ref" : "NatGatewayId"}
+                }
+              ]
+            },
+            "Period": 60,
+            "Stat": "Minimum"
+          }
+        },
+        {
+          "Id": "t1",
+          "Expression": "ANOMALY_DETECTION_BAND(m2, 3)"
+        }
+      ]
+      }
+    },		
+	
+	"CWNATGWIdleTimeoutCountAnomalyDetection": {
+      "Type": "AWS::CloudWatch::AnomalyDetector",
+      "Properties": {
+        "MetricName": "IdleTimeoutCount",
+        "Namespace": "AWS/NATGateway",
+        "Stat": "Average",
+        "Dimensions": [
+          {
+          "Name": "NatGatewayId",
+          "Value": {"Ref" : "NatGatewayId"}
+          }
+         ],		
+        "Configuration": {"MetricTimeZone": "UTC"}
+      }
+    },
+	"CWNATGWIdleTimeoutCountAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+	  "DependsOn": "CWNATGWIdleTimeoutCountAnomalyDetection",
+      "Properties": {
+	    "ActionsEnabled": true,
+		"AlarmActions": [{"Ref" : "SNSTopic"}],
+		"AlarmName": {"Fn::Join":["",[{"Ref":"NatGatewayId"},"-","CWNATGWIdleTimeoutCount"]]},		
+        "ComparisonOperator": "LessThanLowerOrGreaterThanUpperThreshold",
+        "DatapointsToAlarm": 1,
+        "EvaluationPeriods": 1,
+		"ThresholdMetricId": "t1",
+        "TreatMissingData": "missing",
+        "Metrics": [
+          {
+          "Id": "m2",
+          "MetricStat": {
+            "Metric": {
+              "Namespace": "AWS/NATGateway",
+              "MetricName": "IdleTimeoutCount",
+              "Dimensions": [
+                {
+                  "Name": "NatGatewayId",
+                  "Value": {"Ref" : "NatGatewayId"}
+                }
+              ]
+            },
+            "Period": 60,
+            "Stat": "Minimum"
+          }
+        },
+        {
+          "Id": "t1",
+          "Expression": "ANOMALY_DETECTION_BAND(m2, 3)"
+        }
+      ]
+      }
+    },	
+
+	"CWNATGWPacketsDropCountAnomalyDetection": {
+      "Type": "AWS::CloudWatch::AnomalyDetector",
+      "Properties": {
+        "MetricName": "PacketsDropCount",
+        "Namespace": "AWS/NATGateway",
+        "Stat": "Average",
+        "Dimensions": [
+          {
+          "Name": "NatGatewayId",
+          "Value": {"Ref" : "NatGatewayId"}
+          }
+         ],		
+        "Configuration": {"MetricTimeZone": "UTC"}
+      }
+    },
+	"CWNATGWPacketsDropCountAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+	  "DependsOn": "CWNATGWPacketsDropCountAnomalyDetection",
+      "Properties": {
+	    "ActionsEnabled": true,
+		"AlarmActions": [{"Ref" : "SNSTopic"}],
+		"AlarmName": {"Fn::Join":["",[{"Ref":"NatGatewayId"},"-","CWNATGWPacketsDropCount"]]},		
+        "ComparisonOperator": "LessThanLowerOrGreaterThanUpperThreshold",
+        "DatapointsToAlarm": 1,
+        "EvaluationPeriods": 1,
+		"ThresholdMetricId": "t1",
+        "TreatMissingData": "missing",
+        "Metrics": [
+          {
+          "Id": "m2",
+          "MetricStat": {
+            "Metric": {
+              "Namespace": "AWS/NATGateway",
+              "MetricName": "PacketsDropCount",
+              "Dimensions": [
+                {
+                  "Name": "NatGatewayId",
+                  "Value": {"Ref" : "NatGatewayId"}
+                }
+              ]
+            },
+            "Period": 60,
+            "Stat": "Minimum"
+          }
+        },
+        {
+          "Id": "t1",
+          "Expression": "ANOMALY_DETECTION_BAND(m2, 3)"
+        }
+      ]
+      }
+    },		
+	
+	"CWNATGWPacketsInFromDestinationAnomalyDetection": {
+      "Type": "AWS::CloudWatch::AnomalyDetector",
+      "Properties": {
+        "MetricName": "PacketsInFromDestination",
+        "Namespace": "AWS/NATGateway",
+        "Stat": "Average",
+        "Dimensions": [
+          {
+          "Name": "NatGatewayId",
+          "Value": {"Ref" : "NatGatewayId"}
+          }
+         ],		
+        "Configuration": {"MetricTimeZone": "UTC"}
+      }
+    },
+	"CWNATGWPacketsInFromDestinationAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+	  "DependsOn": "CWNATGWPacketsInFromDestinationAnomalyDetection",
+      "Properties": {
+	    "ActionsEnabled": true,
+		"AlarmActions": [{"Ref" : "SNSTopic"}],
+		"AlarmName": {"Fn::Join":["",[{"Ref":"NatGatewayId"},"-","CWNATGWPacketsInFromDestination"]]},		
+        "ComparisonOperator": "LessThanLowerOrGreaterThanUpperThreshold",
+        "DatapointsToAlarm": 1,
+        "EvaluationPeriods": 1,
+		"ThresholdMetricId": "t1",
+        "TreatMissingData": "missing",
+        "Metrics": [
+          {
+          "Id": "m2",
+          "MetricStat": {
+            "Metric": {
+              "Namespace": "AWS/NATGateway",
+              "MetricName": "PacketsInFromDestination",
+              "Dimensions": [
+                {
+                  "Name": "NatGatewayId",
+                  "Value": {"Ref" : "NatGatewayId"}
+                }
+              ]
+            },
+            "Period": 60,
+            "Stat": "Minimum"
+          }
+        },
+        {
+          "Id": "t1",
+          "Expression": "ANOMALY_DETECTION_BAND(m2, 3)"
+        }
+      ]
+      }
+    },	
+
+	"CWNATGWPacketsInFromSourceAnomalyDetection": {
+      "Type": "AWS::CloudWatch::AnomalyDetector",
+      "Properties": {
+        "MetricName": "PacketsInFromSource",
+        "Namespace": "AWS/NATGateway",
+        "Stat": "Average",
+        "Dimensions": [
+          {
+          "Name": "NatGatewayId",
+          "Value": {"Ref" : "NatGatewayId"}
+          }
+         ],		
+        "Configuration": {"MetricTimeZone": "UTC"}
+      }
+    },
+	"CWNATGWPacketsInFromSourceAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+	  "DependsOn": "CWNATGWPacketsInFromSourceAnomalyDetection",
+      "Properties": {
+	    "ActionsEnabled": true,
+		"AlarmActions": [{"Ref" : "SNSTopic"}],
+		"AlarmName": {"Fn::Join":["",[{"Ref":"NatGatewayId"},"-","CWNATGWPacketsInFromSource"]]},		
+        "ComparisonOperator": "LessThanLowerOrGreaterThanUpperThreshold",
+        "DatapointsToAlarm": 1,
+        "EvaluationPeriods": 1,
+		"ThresholdMetricId": "t1",
+        "TreatMissingData": "missing",
+        "Metrics": [
+          {
+          "Id": "m2",
+          "MetricStat": {
+            "Metric": {
+              "Namespace": "AWS/NATGateway",
+              "MetricName": "PacketsInFromSource",
+              "Dimensions": [
+                {
+                  "Name": "NatGatewayId",
+                  "Value": {"Ref" : "NatGatewayId"}
+                }
+              ]
+            },
+            "Period": 60,
+            "Stat": "Minimum"
+          }
+        },
+        {
+          "Id": "t1",
+          "Expression": "ANOMALY_DETECTION_BAND(m2, 3)"
+        }
+      ]
+      }
+    },		
+	
+	"CWNATGWPacketsOutToDestinationAnomalyDetection": {
+      "Type": "AWS::CloudWatch::AnomalyDetector",
+      "Properties": {
+        "MetricName": "PacketsOutToDestination",
+        "Namespace": "AWS/NATGateway",
+        "Stat": "Average",
+        "Dimensions": [
+          {
+          "Name": "NatGatewayId",
+          "Value": {"Ref" : "NatGatewayId"}
+          }
+         ],		
+        "Configuration": {"MetricTimeZone": "UTC"}
+      }
+    },
+	"CWNATGWPacketsOutToDestinationAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+	  "DependsOn": "CWNATGWPacketsOutToDestinationAnomalyDetection",
+      "Properties": {
+	    "ActionsEnabled": true,
+		"AlarmActions": [{"Ref" : "SNSTopic"}],
+		"AlarmName": {"Fn::Join":["",[{"Ref":"NatGatewayId"},"-","CWNATGWPacketsOutToDestination"]]},			
+        "ComparisonOperator": "LessThanLowerOrGreaterThanUpperThreshold",
+        "DatapointsToAlarm": 1,
+        "EvaluationPeriods": 1,
+		"ThresholdMetricId": "t1",
+        "TreatMissingData": "missing",
+        "Metrics": [
+          {
+          "Id": "m2",
+          "MetricStat": {
+            "Metric": {
+              "Namespace": "AWS/NATGateway",
+              "MetricName": "PacketsOutToDestination",
+              "Dimensions": [
+                {
+                  "Name": "NatGatewayId",
+                  "Value": {"Ref" : "NatGatewayId"}
+                }
+              ]
+            },
+            "Period": 60,
+            "Stat": "Minimum"
+          }
+        },
+        {
+          "Id": "t1",
+          "Expression": "ANOMALY_DETECTION_BAND(m2, 3)"
+        }
+      ]
+      }
+    },	
+
+	"CWNATGWPacketsOutToSourceAnomalyDetection": {
+      "Type": "AWS::CloudWatch::AnomalyDetector",
+      "Properties": {
+        "MetricName": "PacketsOutToSource",
+        "Namespace": "AWS/NATGateway",
+        "Stat": "Average",
+        "Dimensions": [
+          {
+          "Name": "NatGatewayId",
+          "Value": {"Ref" : "NatGatewayId"}
+          }
+         ],		
+        "Configuration": {"MetricTimeZone": "UTC"}
+      }
+    },
+	"CWNATGWPacketsOutToSourceAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+	  "DependsOn": "CWNATGWPacketsOutToSourceAnomalyDetection",
+      "Properties": {
+	    "ActionsEnabled": true,
+		"AlarmActions": [{"Ref" : "SNSTopic"}],
+		"AlarmName": {"Fn::Join":["",[{"Ref":"NatGatewayId"},"-","CWNATGWPacketsOutToSource"]]},			
+        "ComparisonOperator": "LessThanLowerOrGreaterThanUpperThreshold",
+        "DatapointsToAlarm": 1,
+        "EvaluationPeriods": 1,
+		"ThresholdMetricId": "t1",
+        "TreatMissingData": "missing",
+        "Metrics": [
+          {
+          "Id": "m2",
+          "MetricStat": {
+            "Metric": {
+              "Namespace": "AWS/NATGateway",
+              "MetricName": "PacketsOutToSource",
+              "Dimensions": [
+                {
+                  "Name": "NatGatewayId",
+                  "Value": {"Ref" : "NatGatewayId"}
+                }
+              ]
+            },
+            "Period": 60,
+            "Stat": "Minimum"
+          }
+        },
+        {
+          "Id": "t1",
+          "Expression": "ANOMALY_DETECTION_BAND(m2, 3)"
+        }
+      ]
+      }
+    },		
+	
+	"SNSTopic": {
+		"Type" : "AWS::SNS::Topic",
+		"Properties" : {
+		  "DisplayName" : "MPCO NAT Gateway Monitoring",
+		  "Subscription" : [{
+		    "Endpoint" : "leszek.walaugo@gmail.com",
+		    "Protocol" : "Email"
+		  }],
+		  "TopicName" : "NATGWMonitoring"
+		}
+	}
+	
+	}
+}	

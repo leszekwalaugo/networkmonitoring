@@ -1,0 +1,358 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "1.6.0_mast_19f3bc8 - MPC Account Base Policy v1.78",
+  
+  "Parameters": {
+  
+    "TransitGatewayId": {
+      "Description": " Provide Transit Gateway Id",
+      "Type": "String"
+    }
+  },
+  
+  "Metadata" : {
+    "AWS::CloudFormation::Interface" : {
+      "ParameterGroups" : [
+        {
+          "Label" : { "default" : "Transit Gateway Id" },
+          "Parameters" : [ "TransitGatewayId"]
+        }
+	  ]	
+	}	
+  },
+  
+    "Resources": {
+	
+	"CWTGWBytesInAnomalyDetection": {
+      "Type": "AWS::CloudWatch::AnomalyDetector",
+      "Properties": {
+        "MetricName": "BytesIn",
+        "Namespace": "AWS/TransitGateway",
+        "Stat": "Average",
+        "Dimensions": [
+          {
+          "Name": "TransitGateway",
+          "Value": {"Ref" : "TransitGatewayId"}
+          }
+         ],		
+        "Configuration": {"MetricTimeZone": "UTC"}
+      }
+    },
+	"CWTGWBytesInAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+	  "DependsOn": "CWTGWBytesInAnomalyDetection",
+      "Properties": {
+	    "ActionsEnabled": true,
+		"AlarmActions": [{"Ref" : "SNSTopic"}],
+        "AlarmName": {"Fn::Join":["",[{"Ref":"TransitGatewayId"},"-","CWDXCWTGWBytesInAlarm"]]},
+        "ComparisonOperator": "LessThanLowerOrGreaterThanUpperThreshold",
+        "DatapointsToAlarm": 1,
+        "EvaluationPeriods": 1,
+		"ThresholdMetricId": "t1",
+        "TreatMissingData": "missing",
+        "Metrics": [
+          {
+          "Id": "m2",
+          "MetricStat": {
+            "Metric": {
+              "Namespace": "TransitGateway",
+              "MetricName": "BytesIn",
+              "Dimensions": [
+                {
+                  "Name": "TransitGateway",
+                  "Value": {"Ref" : "TransitGatewayId"}
+                }
+              ]
+            },
+            "Period": 60,
+            "Stat": "Minimum"
+          }
+        },
+        {
+          "Id": "t1",
+          "Expression": "ANOMALY_DETECTION_BAND(m2, 3)"
+        }
+      ]
+      }
+    },		
+	
+    "CWTGWBytesOutAnomalyDetection": {
+      "Type": "AWS::CloudWatch::AnomalyDetector",
+      "Properties": {
+        "MetricName": "BytesOut",
+        "Namespace": "AWS/TransitGateway",
+        "Stat": "Average",
+        "Dimensions": [
+          {
+          "Name": "TransitGateway",
+          "Value": {"Ref" : "TransitGatewayId"}
+          }
+         ],				
+        "Configuration": {"MetricTimeZone": "UTC"}
+      }
+    },
+	"CWTGWBytesOutAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+	  "DependsOn": "CWTGWBytesInAnomalyDetection",
+      "Properties": {
+	    "ActionsEnabled": true,
+		"AlarmActions": [{"Ref" : "SNSTopic"}],
+        "AlarmName": {"Fn::Join":["",[{"Ref":"TransitGatewayId"},"-","CWDXCWTGWBytesOutAlarm"]]},		
+        "ComparisonOperator": "LessThanLowerOrGreaterThanUpperThreshold",
+        "DatapointsToAlarm": 1,
+        "EvaluationPeriods": 1,
+		"ThresholdMetricId": "t1",
+        "TreatMissingData": "missing",
+        "Metrics": [
+          {
+          "Id": "m2",
+          "MetricStat": {
+            "Metric": {
+              "Namespace": "TransitGateway",
+              "MetricName": "BytesOut",
+              "Dimensions": [
+                {
+                  "Name": "TransitGateway",
+                  "Value": {"Ref" : "TransitGatewayId"}
+                }
+              ]
+            },
+            "Period": 60,
+            "Stat": "Minimum"
+          }
+        },
+        {
+          "Id": "t1",
+          "Expression": "ANOMALY_DETECTION_BAND(m2, 3)"
+        }
+      ]
+      }
+    },			
+	
+    "CWTGWPacketsInAnomalyDetection": {
+      "Type": "AWS::CloudWatch::AnomalyDetector",
+      "Properties": {
+        "MetricName": "PacketsIn",
+        "Namespace": "AWS/TransitGateway",
+        "Stat": "Average",
+        "Dimensions": [
+          {
+          "Name": "TransitGateway",
+          "Value": {"Ref" : "TransitGatewayId"}
+          }
+         ],		
+        "Configuration": {"MetricTimeZone": "UTC"}
+      }
+    },
+	"CWTGWPacketsInAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+	  "DependsOn": "CWTGWPacketsInAnomalyDetection",
+      "Properties": {
+	    "ActionsEnabled": true,
+		"AlarmActions": [{"Ref" : "SNSTopic"}],
+        "AlarmName": {"Fn::Join":["",[{"Ref":"TransitGatewayId"},"-","CWDXCWTGWPacketsInAlarm"]]},		
+        "ComparisonOperator": "LessThanLowerOrGreaterThanUpperThreshold",
+        "DatapointsToAlarm": 1,
+        "EvaluationPeriods": 1,
+		"ThresholdMetricId": "t1",
+        "TreatMissingData": "missing",
+        "Metrics": [
+          {
+          "Id": "m2",
+          "MetricStat": {
+            "Metric": {
+              "Namespace": "TransitGateway",
+              "MetricName": "PacketsIn",
+              "Dimensions": [
+                {
+                  "Name": "TransitGateway",
+                  "Value": {"Ref" : "TransitGatewayId"}
+                }
+              ]
+            },
+            "Period": 60,
+            "Stat": "Minimum"
+          }
+        },
+        {
+          "Id": "t1",
+          "Expression": "ANOMALY_DETECTION_BAND(m2, 3)"
+        }
+      ]
+      }
+    },		
+
+    "CWTGWPacketsOuttAnomalyDetection": {
+      "Type": "AWS::CloudWatch::AnomalyDetector",
+      "Properties": {
+        "MetricName": "PacketsOut",
+        "Namespace": "AWS/TransitGateway",
+        "Stat": "Average",
+        "Dimensions": [
+          {
+          "Name": "TransitGateway",
+          "Value": {"Ref" : "TransitGatewayId"}
+          }
+         ],		
+        "Configuration": {"MetricTimeZone": "UTC"}
+      }
+    },
+	"CWTGWPacketsOutAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+	  "DependsOn": "CWTGWPacketsOuttAnomalyDetection",
+      "Properties": {
+	    "ActionsEnabled": true,
+		"AlarmActions": [{"Ref" : "SNSTopic"}],
+        "AlarmName": {"Fn::Join":["",[{"Ref":"TransitGatewayId"},"-","CWDXCWTGWPacketsOutAlarm"]]},			
+        "ComparisonOperator": "LessThanLowerOrGreaterThanUpperThreshold",
+        "DatapointsToAlarm": 1,
+        "EvaluationPeriods": 1,
+		"ThresholdMetricId": "t1",
+        "TreatMissingData": "missing",
+        "Metrics": [
+          {
+          "Id": "m2",
+          "MetricStat": {
+            "Metric": {
+              "Namespace": "TransitGateway",
+              "MetricName": "PacketsOut",
+              "Dimensions": [
+                {
+                  "Name": "TransitGateway",
+                  "Value": {"Ref" : "TransitGatewayId"}
+                }
+              ]
+            },
+            "Period": 60,
+            "Stat": "Minimum"
+          }
+        },
+        {
+          "Id": "t1",
+          "Expression": "ANOMALY_DETECTION_BAND(m2, 3)"
+        }
+      ]
+      }
+    },		
+
+    "CWTGWPacketDropCountBlackholeAnomalyDetection": {
+      "Type": "AWS::CloudWatch::AnomalyDetector",
+      "Properties": {
+        "MetricName": "PacketDropCountBlackhole",
+        "Namespace": "AWS/TransitGateway",
+        "Stat": "Average",
+        "Dimensions": [
+          {
+          "Name": "TransitGateway",
+          "Value": {"Ref" : "TransitGatewayId"}
+          }
+         ],		
+        "Configuration": {"MetricTimeZone": "UTC"}
+      }
+    },
+	"CWTGWPacketDropCountBlackholeAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+	  "DependsOn": "CWTGWPacketDropCountBlackholeAnomalyDetection",
+      "Properties": {
+	    "ActionsEnabled": true,
+		"AlarmActions": [{"Ref" : "SNSTopic"}],
+		"AlarmName": {"Fn::Join":["",[{"Ref":"TransitGatewayId"},"-","CWDXCWTGWPacketDropCountBlackholeAlarm"]]},	
+        "ComparisonOperator": "LessThanLowerOrGreaterThanUpperThreshold",
+        "DatapointsToAlarm": 1,
+        "EvaluationPeriods": 1,
+		"ThresholdMetricId": "t1",
+        "TreatMissingData": "missing",
+        "Metrics": [
+          {
+          "Id": "m2",
+          "MetricStat": {
+            "Metric": {
+              "Namespace": "TransitGateway",
+              "MetricName": "PacketDropCountBlackhole",
+              "Dimensions": [
+                {
+                  "Name": "TransitGateway",
+                  "Value": {"Ref" : "TransitGatewayId"}
+                }
+              ]
+            },
+            "Period": 60,
+            "Stat": "Minimum"
+          }
+        },
+        {
+          "Id": "t1",
+          "Expression": "ANOMALY_DETECTION_BAND(m2, 3)"
+        }
+      ]
+      }
+    },		
+
+    "CWTGWPacketDropCountNoRouteAnomalyDetection": {
+      "Type": "AWS::CloudWatch::AnomalyDetector",
+      "Properties": {
+        "MetricName": "PacketDropCountNoRoute",
+        "Namespace": "AWS/TransitGateway",
+        "Stat": "Average",
+        "Dimensions": [
+          {
+          "Name": "TransitGateway",
+          "Value": {"Ref" : "TransitGatewayId"}
+          }
+         ],		
+        "Configuration": {"MetricTimeZone": "UTC"}
+      }
+    },
+	"CWTGWPacketDropCountNoRouteAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+	  "DependsOn": "CWTGWPacketDropCountNoRouteAnomalyDetection",
+      "Properties": {
+	    "ActionsEnabled": true,
+		"AlarmActions": [{"Ref" : "SNSTopic"}],
+		"AlarmName": {"Fn::Join":["",[{"Ref":"TransitGatewayId"},"-","CWDXCWTGWPacketDropCountNoRouteAlarm"]]},		
+        "ComparisonOperator": "LessThanLowerOrGreaterThanUpperThreshold",
+        "DatapointsToAlarm": 1,
+        "EvaluationPeriods": 1,
+		"ThresholdMetricId": "t1",
+        "TreatMissingData": "missing",
+        "Metrics": [
+          {
+          "Id": "m2",
+          "MetricStat": {
+            "Metric": {
+              "Namespace": "TransitGateway",
+              "MetricName": "PacketDropCountNoRoute",
+              "Dimensions": [
+                {
+                  "Name": "TransitGateway",
+                  "Value": {"Ref" : "TransitGatewayId"}
+                }
+              ]
+            },
+            "Period": 60,
+            "Stat": "Minimum"
+          }
+        },
+        {
+          "Id": "t1",
+          "Expression": "ANOMALY_DETECTION_BAND(m2, 3)"
+        }
+      ]
+      }
+    },
+
+	"SNSTopic": {
+		"Type" : "AWS::SNS::Topic",
+		"Properties" : {
+		  "DisplayName" : "Transit Gateway Monitoring",
+		  "Subscription" : [{
+		    "Endpoint" : "leszek.walaugo@gmail.com",
+		    "Protocol" : "Email"
+		  }],
+		  "TopicName" : "TGWMonitoring"
+		}
+	}	
+	
+	
+	}
+}	

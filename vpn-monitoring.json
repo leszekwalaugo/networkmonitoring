@@ -1,0 +1,163 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "1.6.0_mast_19f3bc8 - MPC Account Base Policy v1.78",
+  
+  "Parameters": {
+  
+    "VpnId": {
+      "Description": " Provide VPN Id",
+      "Type": "String"
+    }
+  },
+  
+  "Metadata" : {
+    "AWS::CloudFormation::Interface" : {
+      "ParameterGroups" : [
+        {
+          "Label" : { "default" : "VPN Id" },
+          "Parameters" : [ "VpnId"]
+        }
+	  ]	
+	}	
+  },
+  
+    "Resources": {
+	
+	"CWVPNStateAlarm": {
+		"Type": "AWS::CloudWatch::Alarm",
+		"Properties": {
+			"AlarmName" : "CloudTrailVPNState",
+		    "AlarmName": {"Fn::Join":["",[{"Ref":"VpnId"},"-","CloudTrailVPNState",				
+			"AlarmDescription" : "Alarms when an VPN connection is down",
+			"MetricName" : "VPNState",
+			"Namespace" : "CloudTrailMetrics",
+			"ComparisonOperator" : "GreaterThanOrEqualToThreshold",
+			"EvaluationPeriods" : "1",
+			"Period" : "300",
+			"Statistic" : "Sum",
+			"Threshold" : "1",
+			"TreatMissingData" : "notBreaching",
+			"AlarmActions" : [{"Ref" : "SNSTopic"}]
+		}
+	},
+
+	"CWVPNTunnelDataInAnomalyDetection": {
+      "Type": "AWS::CloudWatch::AnomalyDetector",
+      "Properties": {
+        "MetricName": "TunnelDataIn",
+        "Namespace": "AWS/VPN",
+        "Stat": "Average",
+        "Dimensions": [
+          {
+          "Name": "VpnId",
+          "Value": {"Ref" : "VpnId"}
+          }
+         ],		
+        "Configuration": {"MetricTimeZone": "UTC"}
+      }
+    },
+	"CWDXConnectionBpsEgressAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+	  "DependsOn": "CWVPNTunnelDataInAnomalyDetection",
+      "Properties": {
+	    "ActionsEnabled": true,
+		"AlarmActions": [{"Ref" : "SNSTopic"}],
+		"AlarmName": {"Fn::Join":["",[{"Ref":"VpnId"},"-","CWVPNTunnelDataIn",			
+        "ComparisonOperator": "LessThanLowerOrGreaterThanUpperThreshold",
+        "DatapointsToAlarm": 1,
+        "EvaluationPeriods": 1,
+		"ThresholdMetricId": "t1",
+        "TreatMissingData": "missing",
+        "Metrics": [
+          {
+          "Id": "m2",
+          "MetricStat": {
+            "Metric": {
+              "Namespace": "AWS/VPN",
+              "MetricName": "TunnelDataIn",
+              "Dimensions": [
+                {
+                  "Name": "VpnId",
+                  "Value": {"Ref" : "VpnId"}
+                }
+              ]
+            },
+            "Period": 60,
+            "Stat": "Minimum"
+          }
+        },
+        {
+          "Id": "t1",
+          "Expression": "ANOMALY_DETECTION_BAND(m2, 3)"
+        }
+      ]
+      }
+    },		
+	
+	"CWVPNTunnelDataOutAnomalyDetection": {
+      "Type": "AWS::CloudWatch::AnomalyDetector",
+      "Properties": {
+        "MetricName": "TunnelDataOut",
+        "Namespace": "AWS/VPN",
+        "Stat": "Average",
+        "Dimensions": [
+          {
+          "Name": "VpnId",
+          "Value": {"Ref" : "VpnId"}
+          }
+         ],		
+        "Configuration": {"MetricTimeZone": "UTC"}
+      }
+    },
+	"CWDXVPNTunnelDataOutEgressAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+	  "DependsOn": "CWVPNTunnelDataOutAnomalyDetection",
+      "Properties": {
+	    "ActionsEnabled": true,
+		"AlarmActions": [{"Ref" : "SNSTopic"}],
+		"AlarmName": {"Fn::Join":["",[{"Ref":"VpnId"},"-","CWVPNTunnelDataOut",		
+        "ComparisonOperator": "LessThanLowerOrGreaterThanUpperThreshold",
+        "DatapointsToAlarm": 1,
+        "EvaluationPeriods": 1,
+		"ThresholdMetricId": "t1",
+        "TreatMissingData": "missing",
+        "Metrics": [
+          {
+          "Id": "m2",
+          "MetricStat": {
+            "Metric": {
+              "Namespace": "AWS/VPN",
+              "MetricName": "TunnelDataOut",
+              "Dimensions": [
+                {
+                  "Name": "VpnId",
+                  "Value": {"Ref" : "VpnId"}
+                }
+              ]
+            },
+            "Period": 60,
+            "Stat": "Minimum"
+          }
+        },
+        {
+          "Id": "t1",
+          "Expression": "ANOMALY_DETECTION_BAND(m2, 3)"
+        }
+      ]
+      }
+    },	
+	
+	"SNSTopic": {
+		"Type" : "AWS::SNS::Topic",
+		"Properties" : {
+		  "DisplayName" : "VPN Monitoring",
+		  "Subscription" : [{
+		    "Endpoint" : "leszek.walaugo@gmail.com",
+		    "Protocol" : "Email"
+		  }],
+		  "TopicName" : "VPNMonitoring"
+		}
+	}
+	
+	}
+}	
